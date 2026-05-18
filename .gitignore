@@ -1,31 +1,26 @@
-# Node modules
-/node_modules
-
-# Compilation output
-/dist
-
-# pnpm deploy output
-/bundle
-
-# Hardhat Build Artifacts
-/artifacts
-
-# Hardhat compilation (v2) support directory
-/cache
-
-# Typechain output
-/types
-
-# Environment files
+node_modules/
+dist/
+build/
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+uploads/
+*.log
+.DS_Store
+Thumbs.db
 
-# Hardhat coverage reports
-/coverage
+client/node_modules/
+client/dist/
 
-# Gas snapshot files
-/.gas-snapshot
+server/node_modules/
+server/uploads/
+server/.env
 
-# Snapshot cheatcodes output
-/snapshots
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/.env
+
+*.zip
+cookies.txt
+cookies2.txt
+cookies3.txt

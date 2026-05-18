@@ -1,0 +1,19 @@
+{
+  "uploadedHash": "0xabc123",
+  "originalHash": "0xabc123",
+  "extractedFields": {
+    "studentName": "Alex Jain",
+    "enrollmentNo": "NIDL-2021-CS-1042",
+    "degree": "B.Tech Computer Science",
+    "department": "Computer Science",
+    "graduationYear": "2025"
+  },
+  "credentialRecord": {
+    "studentName": "Alex Jain",
+    "enrollmentNo": "NIDL-2021-CS-1042",
+    "degree": "B.Tech Computer Science",
+    "department": "Computer Science",
+    "graduationYear": "2025",
+    "university": "National Institute of Digital Learning"
+  }
+}
