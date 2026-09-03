@@ -1,31 +1,36 @@
 # TrustChain Docs
 
-TrustChain Docs is a Web3 academic credential verification system. It verifies a document by hashing the exact file bytes with SHA-256, storing encrypted documents off-chain, recording hash proof on an EVM-compatible blockchain, and using an AI integrity layer only to explain risk and confidence.
+TrustChain Docs verifies academic credentials without storing the document itself on a blockchain.
 
-## What is production-hardened in this patched build
+## How verification works
 
-- Frontend demo fallback is disabled by default.
-- Issuer upload and employer direct verification both support AES-GCM client-side file encryption before upload.
-- Backend always decrypts encrypted uploads before hashing, then recomputes SHA-256 from raw bytes.
-- Blockchain anchoring no longer creates fake/mock transaction hashes. If chain config is missing, the document is saved with `blockchain_status=pending` and an explicit error.
-- Smart contract upload now sends a non-zero `studentIdHash`, matching the current `DocumentVerification.sol` requirement.
-- AI output is separated from final verification status. Backend `status` remains `verified`, `tampered`, `pending`, or `rejected`; AI classification appears as `aiStatus`.
-- AI provider visibility is shown in the result card: backend fallback, FastAPI rule engine, or Ollama LLM.
-- Full PostgreSQL schema and demo-user seed scripts are included.
+1. An issuer uploads a credential.
+2. The server encrypts its stored copy and calculates a SHA-256 fingerprint from the original file bytes.
+3. The fingerprint and credential status are saved in PostgreSQL. A proof can also be recorded through the Solidity contract.
+4. A verifier uploads the file again. An exact fingerprint match with an active credential is **verified**; a different fingerprint is **tampered**.
+5. The AI service explains the supporting signals and risk. It never overrides the hash result.
 
-## Project layout
+## Project structure
 
-```txt
-client/        React + TypeScript + Vite frontend
-server/        Node.js + Express + PostgreSQL backend
-ai-service/    FastAPI AI integrity service with optional Ollama
-contracts/     Solidity document hash registry
-Scripts/       Hardhat deploy script
+```text
+client/       React, TypeScript, Vite user interface
+server/       Express API, PostgreSQL, authentication and verification logic
+ai-service/   FastAPI risk explanation service; Ollama is optional
+contracts/    Solidity document-hash registry
+Scripts/      Hardhat deployment script
 ```
 
-## Local setup
+## Main user journeys
 
-### 1. Database
+- **Issuer:** creates and issues credentials.
+- **Student:** receives and approves or rejects verification requests.
+- **Employer:** submits a credential for verification.
+- **Administrator:** approves sensitive account registrations.
+- **Public verifier:** checks a credential through a QR/public verification link.
+
+## Run locally
+
+### 1. Database and API
 
 Create a PostgreSQL database named `trustchain`, then run:
 
@@ -34,29 +39,13 @@ cd server
 npm install
 npm run db:schema
 npm run db:seed
-```
-
-Demo users after seeding:
-
-```txt
-issuer@trustchain.local / Password@123
-student@trustchain.local / Password@123
-employer@trustchain.local / Password@123
-developer@trustchain.local / Password@123
-```
-
-### 2. Environment keys
-
-The patched ZIP includes local development `.env` files with freshly generated non-production keys so the encrypted wrapper can run immediately. For your own machine, generate new values:
-
-```bash
-cd server
 npm run keys
+npm run dev
 ```
 
-Copy the server values into `server/.env` and `VITE_API_WRAPPER_KEY` into `client/.env`.
+Create `server/.env` with the generated server keys and database settings. Create `client/.env` with `VITE_API_WRAPPER_KEY`.
 
-### 3. AI service
+### 2. AI service (optional)
 
 ```bash
 cd ai-service
@@ -64,44 +53,9 @@ pip install -r requirements.txt
 python -m uvicorn app:app --reload --port 8001
 ```
 
-Optional Ollama:
+Ollama can be enabled separately if a local language-model explanation is wanted.
 
-```bash
-ollama pull llama3.2:1b
-ollama serve
-```
-
-### 4. Blockchain
-
-Local Hardhat chain:
-
-```bash
-npm install
-npx hardhat node
-```
-
-In another terminal:
-
-```bash
-npm run deploy:local
-```
-
-Copy the printed `CONTRACT_ADDRESS` into `server/.env`. Use one of the local Hardhat private keys as `BLOCKCHAIN_PRIVATE_KEY`.
-
-Polygon Amoy:
-
-```bash
-npm run deploy:amoy
-```
-
-For Amoy, set `BLOCKCHAIN_RPC_URL`, `BLOCKCHAIN_PRIVATE_KEY`, and fund the wallet with Amoy POL.
-
-### 5. Backend and frontend
-
-```bash
-cd server
-npm run dev
-```
+### 3. Client
 
 ```bash
 cd client
@@ -111,18 +65,26 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-## Live demo checklist
+### 4. Blockchain (optional)
 
-1. Login as issuer and upload an original credential file.
-2. Confirm the frontend hash and backend hash match.
-3. Confirm QR proof and blockchain panel are shown.
-4. Login as employer and verify the same file: result should be verified.
-5. Edit the file slightly and verify again: result should be tampered.
-6. Check the AI panel for score, risk, provider, matched/mismatched signals, and audit trace.
-7. Send a student consent request by email.
-8. Login as student and approve/reject.
-9. Open the QR public verification page.
+```bash
+npm install
+npx hardhat node
+```
 
-## Important truth for jury
+In a second terminal:
 
-AI does not decide authenticity. The source of truth is SHA-256 hash comparison plus active credential status and optional blockchain proof. AI translates those cryptographic signals into a readable risk explanation.
+```bash
+npm run deploy:local
+```
+
+Copy the printed contract address and a local private key into `server/.env`.
+
+## Demo accounts
+
+Run `npm run db:seed` in `server/`, then use `Password@123` with one of:
+
+- `issuer@trustchain.local`
+- `student@trustchain.local`
+- `employer@trustchain.local`
+- `developer@trustchain.local`

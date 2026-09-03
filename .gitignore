@@ -11,10 +11,13 @@ Thumbs.db
 
 client/node_modules/
 client/dist/
+artifacts/
+cache/
 
 server/node_modules/
 server/uploads/
 server/.env
+server/.patch-backups/
 
 ai-service/.venv/
 ai-service/__pycache__/
